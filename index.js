@@ -4,12 +4,23 @@ const mysql = require('mysql2');
 const app = express();
 const port = 3000;
 
-// Configurar la conexión a la base de datos
-const connection = mysql.createConnection({
+// Configurar la conexión a la base de datos utilizando un pool de conexiones
+const pool = mysql.createPool({
   host: 'mdb-test.c6vunyturrl6.us-west-1.rds.amazonaws.com',
   user: 'bsale_test',
   password: 'bsale_test',
   database: 'airline',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error('Error al obtener la conexión de la base de datos:', err);
+  } else {
+    console.log('Conexión a la base de datos establecida');
+  }
 });
 
 // Ruta para el endpoint /flights/:id/passengers
