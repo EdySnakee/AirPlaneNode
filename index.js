@@ -6,9 +6,10 @@ const port = 3000;
 
 // Configurar la conexión a la base de datos utilizando un pool de conexiones
 const pool = mysql.createPool({
-  host: 'mdb-test.c6vunyturrl6.us-west-1.rds.amazonaws.com',
-  user: 'bsale_test',
-  password: 'bsale_test',
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: 'root1234',
   database: 'airline',
   waitForConnections: true,
   connectionLimit: 10,
@@ -27,34 +28,63 @@ pool.getConnection((err, connection) => {
 app.get('/flights/:id/passengers', (req, res) => {
   const flightId = req.params.id;
 
-  // implementar la lógica para consultar la base de datos y realizar la simulación del check-in
-  // Recuerda transformar los nombres de los campos de snake_case a camelCase
+  // Consultar la base de datos para obtener los datos de simulación del check-in
+  const query = `SELECT
+    f.flight_id AS flightId,
+    f.takeoff_date_time AS takeoffDateTime,
+    f.takeoff_airport AS takeoffAirport,
+    f.landing_date_time AS landingDateTime,
+    f.landing_airport AS landingAirport,
+    f.airplane_id AS airplaneId,
+    p.passenger_id AS passengerId,
+    p.dni,
+    p.name,
+    p.age,
+    p.country,
+    bp.boarding_pass_id AS boardingPassId,
+    bp.purchase_id AS purchaseId,
+    bp.seat_type_id AS seatTypeId,
+    bp.seat_id AS seatId
+  FROM
+    flight AS f
+    INNER JOIN boarding_pass AS bp ON f.flight_id = bp.flight_id
+    INNER JOIN passenger AS p ON bp.passenger_id = p.passenger_id
+  WHERE
+    f.flight_id = ?`;
 
-  // Ejemplo de respuesta de prueba
-  const data = {
-    flightId: flightId,
-    takeoffDateTime: Date.now(),
-    takeoffAirport: 'Aeropuerto Internacional Arturo Merino Benitez, Chile',
-    landingDateTime: Date.now() + 3600000,
-    landingAirport: 'Aeropuerto Internacional Jorge Chávez, Perú',
-    airplaneId: 1,
-    passengers: [
-      {
-        passengerId: 90,
-        dni: 983834822,
-        name: 'Marisol',
-        age: 44,
-        country: 'México',
-        boardingPassId: 24,
-        purchaseId: 47,
-        seatTypeId: 1,
-        seatId: 1,
-      },
-      // Otros pasajeros...
-    ],
-  };
+  pool.query(query, [flightId], (err, results) => {
+    if (err) {
+      console.error('Error al consultar la base de datos:', err);
+      res.status(500).json({ code: 500, error: 'Internal Server Error' });
+    } else if (results.length === 0) {
+      res.status(404).json({ code: 404, data: {} });
+    } else {
+      // Transformar los nombres de los campos de snake_case a camelCase
+      const transformedResults = results.map((row) => {
+        return {
+          flightId: row.flightId,
+          takeoffDateTime: row.takeoffDateTime,
+          takeoffAirport: row.takeoffAirport,
+          landingDateTime: row.landingDateTime,
+          landingAirport: row.landingAirport,
+          airplaneId: row.airplaneId,
+          passengers: {
+            passengerId: row.passengerId,
+            dni: row.dni,
+            name: row.name,
+            age: row.age,
+            country: row.country,
+            boardingPassId: row.boardingPassId,
+            purchaseId: row.purchaseId,
+            seatTypeId: row.seatTypeId,
+            seatId: row.seatId,
+          },
+        };
+      });
 
-  res.json({ code: 200, data });
+      res.json({ code: 200, data: transformedResults });
+    }
+  });
 });
 
 // Iniciar el servidor
