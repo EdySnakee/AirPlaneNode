@@ -60,6 +60,8 @@ app.get('/flights/:id/passengers', (req, res) => {
     } else if (results.length === 0) {
       res.status(404).json({ code: 404, data: {} });
     } else {
+
+
       // Transformar los nombres de los campos de snake_case a camelCase
       const transformedResults = results.map((row) => {
         return {
@@ -85,8 +87,10 @@ app.get('/flights/:id/passengers', (req, res) => {
 
       // Filtrar los pasajeros menores de edad
       menores_edad = transformedResults.filter(
-        (pasajero) => pasajero.passengers.age == 10
-      );
+        (pasajero) => pasajero.passengers.age < 18
+          ); 
+             console.log(menores_edad);
+            
 
 
 
@@ -95,20 +99,28 @@ app.get('/flights/:id/passengers', (req, res) => {
  transformedResults.forEach((pasajero) => {
    const purchase_id = pasajero.passengers.purchaseId;
    if (pasajero.passengers.age >= 18) {
-     if (!acompañantes[purchase_id]) {
+     if (!acompañantes[purchase_id])
+      {
        acompañantes[purchase_id] = [];
      }
      acompañantes[purchase_id].push(pasajero);
    }
  });
 
+
+// menor con un mayor
+
+
  // Asignar asientos a los pasajeros menores de edad
  menores_edad.forEach((pasajero) => {
    const purchase_id = pasajero.passengers.purchaseId;
    if (acompañantes[purchase_id]) {
+
+
      // Lógica de asignación de asientos cercanos para pasajeros menores
      // Utiliza la información de los acompañantes y asigna un asiento cercano
-   }
+   
+    }
  });
 
  // Asignar asientos a los pasajeros adultos
@@ -130,5 +142,4 @@ app.get('/flights/:id/passengers', (req, res) => {
 // Iniciar el servidor
 app.listen(port, () => {
   console.log(`Servidor en ejecución en http://localhost:${port}`);
-  console.log(menores_edad);
 });
