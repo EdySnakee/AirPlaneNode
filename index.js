@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 
 const app = express();
 const port = 3000;
+let menores_edad = [];
 
 // Configurar la conexión a la base de datos utilizando un pool de conexiones
 const pool = mysql.createPool({
@@ -82,6 +83,45 @@ app.get('/flights/:id/passengers', (req, res) => {
         };
       });
 
+      // Filtrar los pasajeros menores de edad
+      menores_edad = transformedResults.filter(
+        (pasajero) => pasajero.passengers.age == 10
+      );
+
+
+
+ // Agrupar los acompañantes mayores de edad
+ const acompañantes = {};
+ transformedResults.forEach((pasajero) => {
+   const purchase_id = pasajero.passengers.purchaseId;
+   if (pasajero.passengers.age >= 18) {
+     if (!acompañantes[purchase_id]) {
+       acompañantes[purchase_id] = [];
+     }
+     acompañantes[purchase_id].push(pasajero);
+   }
+ });
+
+ // Asignar asientos a los pasajeros menores de edad
+ menores_edad.forEach((pasajero) => {
+   const purchase_id = pasajero.passengers.purchaseId;
+   if (acompañantes[purchase_id]) {
+     // Lógica de asignación de asientos cercanos para pasajeros menores
+     // Utiliza la información de los acompañantes y asigna un asiento cercano
+   }
+ });
+
+ // Asignar asientos a los pasajeros adultos
+ transformedResults.forEach((pasajero) => {
+   if (!menores_edad.includes(pasajero)) {
+     // Lógica de asignación de asientos para pasajeros adultos
+   }
+ });
+
+ // Actualizar los datos de asientos en la base de datos
+ // Realiza las actualizaciones necesarias en la base de datos con los asientos asignados
+
+
       res.json({ code: 200, data: transformedResults });
     }
   });
@@ -90,4 +130,5 @@ app.get('/flights/:id/passengers', (req, res) => {
 // Iniciar el servidor
 app.listen(port, () => {
   console.log(`Servidor en ejecución en http://localhost:${port}`);
+  console.log(menores_edad);
 });
